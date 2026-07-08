@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request
 from services.sync_service import processar_webhook_hubspot, processar_webhook_monday
 
 router = APIRouter(prefix="/webhook", tags=["Integracoes"])
+public_router = APIRouter(tags=["Integracoes"])
 
 @router.post("/monday")
 async def webhook_monday(request: Request):
@@ -15,5 +16,17 @@ async def webhook_monday(request: Request):
 
 @router.post("/hubspot")
 async def webhook_hubspot(request: Request):
+    body = await request.json()
+    return processar_webhook_hubspot(body)
+
+
+@router.post("/hubspot-monday")
+async def webhook_hubspot_monday(request: Request):
+    body = await request.json()
+    return processar_webhook_hubspot(body)
+
+
+@public_router.post("/hubspot-monday")
+async def webhook_hubspot_monday_public(request: Request):
     body = await request.json()
     return processar_webhook_hubspot(body)
