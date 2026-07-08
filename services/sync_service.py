@@ -7,6 +7,7 @@ from config import (
     MONDAY_STATUS_HORAS_RECEBIDAS,
 )
 from services.hubspot_service import (
+    atualizar_content,
     atualizar_horas_e_analise,
     buscar_ticket,
     buscar_ticket_por_id_monday,
@@ -49,6 +50,9 @@ def processar_webhook_monday(body):
     status_monday = texto_coluna(item, ["status", "situacao"])
     if normalizar_texto(status_monday) == normalizar_texto(MONDAY_STATUS_HORAS_RECEBIDAS):
         return enviar_horas_para_hubspot(item)
+
+    if event_type == "change_column_value" or event.get("columnId"):
+        return atualizar_content_hubspot(item)
 
     return {
         "status": "ignorado",
@@ -126,6 +130,22 @@ def enviar_horas_para_hubspot(item):
     ticket_atualizado = atualizar_horas_e_analise(ticket["id"], item)
     return {
         "status": "horas enviadas para HubSpot",
+        "monday_item_id": item["id"],
+        "hubspot_ticket_id": ticket_atualizado.get("id"),
+    }
+
+
+def atualizar_content_hubspot(item):
+    ticket = buscar_ticket_por_id_monday(item["id"])
+    if not ticket:
+        return {
+            "erro": "ticket HubSpot nao encontrado pelo id_monday",
+            "monday_item_id": item["id"],
+        }
+
+    ticket_atualizado = atualizar_content(ticket["id"], item)
+    return {
+        "status": "content atualizado no HubSpot",
         "monday_item_id": item["id"],
         "hubspot_ticket_id": ticket_atualizado.get("id"),
     }

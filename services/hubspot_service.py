@@ -12,7 +12,7 @@ from services.monday_service import (
     links_anexos,
     numero_coluna,
     texto_coluna,
-    ultima_descricao,
+    texto_coluna_flexivel,
 )
 
 HUBSPOT_TICKETS_URL = "https://api.hubapi.com/crm/v3/objects/tickets"
@@ -121,18 +121,82 @@ def atualizar_horas_e_analise(ticket_id, item):
             "horas_de_desenvolvimento": horas_dev,
             "horas_de_analise": horas_analise,
             "horas_qa": horas_qa,
+            "content": montar_descricao(item, links_anexos(item)),
             "hs_pipeline_stage": HUBSPOT_STAGE_ID_ANALISE,
         },
     )
 
 
+def atualizar_content(ticket_id, item):
+    return atualizar_ticket(
+        ticket_id,
+        {
+            "content": montar_descricao(item, links_anexos(item)),
+        },
+    )
+
+
 def montar_descricao(item, anexos):
-    descricao = ultima_descricao(item) or "Sem descricao informada"
-    partes = [
-        descricao,
-        "",
-        f"Monday: {link_item(item)}",
+    campos = [
+        (
+            "Situação",
+            [
+                "situacao",
+                "situação",
+                "descreva detalhadamente o problema",
+                "descreva detalhadamente o problema ou situacao atual",
+                "descreva detalhadamente o problema ou situação atual",
+            ],
+        ),
+        (
+            "Processo para solução",
+            [
+                "processo para solucao",
+                "processo para solução",
+                "descreva detalhadamente os objetivos",
+                "objetivos para solucionar o problema",
+            ],
+        ),
+        (
+            "Observação adicional",
+            [
+                "observacao adicional",
+                "observação adicional",
+                "observacoes adicionais",
+                "observações adicionais",
+            ],
+        ),
+        ("ID", ["id"]),
+        ("E-mail", ["e-mail", "email"]),
+        (
+            "Informe o site utilizado para acessar o EFFORT",
+            [
+                "informe o site utilizado para acessar o effort",
+                "site utilizado",
+                "effort",
+            ],
+        ),
+        (
+            "Qtd Horas Total",
+            [
+                "qtd horas total",
+                "quantidade de horas",
+                "quantidade_de_horas",
+                "horas totais",
+            ],
+        ),
     ]
+
+    partes = []
+    for rotulo, titulos in campos:
+        valor = texto_coluna_flexivel(item, titulos, "Nao informado")
+        partes.append(f"{rotulo}:")
+        partes.append(valor)
+        partes.append("")
+
+    partes.extend([
+        f"Monday: {link_item(item)}",
+    ])
 
     if anexos:
         partes.extend(["", "Anexos:", *anexos])

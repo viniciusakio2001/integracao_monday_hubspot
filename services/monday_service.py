@@ -118,6 +118,21 @@ def texto_coluna(item, titulos, default=""):
     return coluna.get("text") or default
 
 
+def texto_coluna_flexivel(item, titulos, default=""):
+    coluna = buscar_coluna(item, titulos)
+    if coluna:
+        return coluna.get("text") or default
+
+    titulos_normalizados = [normalizar_texto(titulo) for titulo in titulos]
+    for coluna in item.get("column_values", []):
+        titulo_coluna = normalizar_texto(coluna.get("column", {}).get("title"))
+        for titulo in titulos_normalizados:
+            if titulo and (titulo in titulo_coluna or titulo_coluna in titulo):
+                return coluna.get("text") or default
+
+    return default
+
+
 def numero_coluna(item, titulos):
     valor = texto_coluna(item, titulos)
     if not valor:
